@@ -230,7 +230,8 @@ export default function Client() {
                 </div>
               </div>
               
-    
+             
+            </div>
 
             {/* LED Control */}
             <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
