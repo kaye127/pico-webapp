@@ -1,107 +1,3 @@
-// import express from "express";
-// import http from "http";
-// import cors from "cors";
-// import { WebSocketServer } from "ws";
-
-// const PORT = process.env.PORT || 3000;
-// const app = express();
-// const server = http.createServer(app);
-// const wss = new WebSocketServer({ server });
-
-// app.use(cors());
-// app.use(express.json());
-
-// let deviceClients = {};   // { topic: Set<WebSocket> }
-// let latestData = {};      // { topic: latestPayload }
-// let boardToClientMap = {}; // { topic: { board: Set, clients: Set } }
-
-// function ensureTopic(topic) {
-//   if (!boardToClientMap[topic]) {
-//     boardToClientMap[topic] = {
-//       board: new Set(),
-//       clients: new Set(),
-//     };
-//   }
-// }
-
-// // WebSocket logic
-// wss.on("connection", (ws) => {
-//   let assignedTopic = null;
-//   let isBoard = false;
-
-//   ws.on("message", (msg) => {
-//     try {
-//       const [topic, jsonStr] = msg.toString().split(":", 2);
-//       const data = JSON.parse(jsonStr);
-
-//       if (!topic) return;
-//       ensureTopic(topic);
-//       assignedTopic = topic;
-
-//       // Determine role
-//       if ("temp" in data) {
-//         isBoard = true;
-//         boardToClientMap[topic].board.add(ws);
-//         latestData[topic] = data;
-//       } else {
-//         isBoard = false;
-//         boardToClientMap[topic].clients.add(ws);
-//       }
-
-//       // Broadcast to all clients (except sender)
-//       const receivers = isBoard
-//         ? boardToClientMap[topic].clients
-//         : boardToClientMap[topic].board;
-
-//       receivers.forEach(client => {
-//         if (client !== ws && client.readyState === ws.OPEN) {
-//           client.send(`${topic}:${JSON.stringify(data)}`);
-//         }
-//       });
-
-//     } catch (err) {
-//       console.error("Invalid WebSocket message:", err.message);
-//     }
-//   });
-
-//   ws.on("close", () => {
-//     if (assignedTopic) {
-//       boardToClientMap[assignedTopic].board.delete(ws);
-//       boardToClientMap[assignedTopic].clients.delete(ws);
-
-//       if (
-//         boardToClientMap[assignedTopic].board.size === 0 &&
-//         boardToClientMap[assignedTopic].clients.size === 0
-//       ) {
-//         delete boardToClientMap[assignedTopic];
-//         delete latestData[assignedTopic];
-//       }
-//     }
-//   });
-// });
-
-// // Routes
-
-// app.get("/", (req, res) => {
-//   res.send("✅ IoT WebSocket backend running.");
-// });
-
-// app.get("/admin", (req, res) => {
-//   const topics = Object.keys(boardToClientMap).map((topic) => ({
-//     topic,
-//     clients: boardToClientMap[topic].clients.size,
-//     boards: boardToClientMap[topic].board.size,
-//     latest: latestData[topic] || null,
-//   }));
-//   res.json({ topics });
-// });
-
-// server.listen(PORT, () => {
-//   console.log(`🚀 Server running at http://localhost:${PORT}`);
-// });
-
-
-
 import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
@@ -114,7 +10,7 @@ const server = createServer(app);
 
 // Enable CORS for all routes
 app.use(cors({
-    origin: "*",
+    origin: ["http://localhost:5173", "http://localhost:3000"],
     credentials: true
 }));
 
@@ -133,6 +29,11 @@ const io = new Server(server, {
 const webSocketManager = new WebSocketManager(io);
 const sseManager = new SSEManager();
 
+// Connect WebSocket manager to SSE for broadcasting
+webSocketManager.setSSECallback((event, data) => {
+  sseManager.broadcast(event, data);
+});
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({ 
@@ -147,10 +48,28 @@ app.get('/api/stream', (req, res) => {
   sseManager.addClient(req, res);
 });
 
-// Get device stats
+// Get device stats for admin dashboard
 app.get('/api/stats', (req, res) => {
   const stats = webSocketManager.getStats();
   res.json(stats);
+});
+
+// Get all devices for admin dashboard
+app.get('/api/devices', (req, res) => {
+  const devices = webSocketManager.getAllDevices();
+  res.json({ devices });
+});
+
+// Get specific device data
+app.get('/api/device/:deviceName', (req, res) => {
+  const { deviceName } = req.params;
+  const device = webSocketManager.getDevice(deviceName);
+  
+  if (!device) {
+    return res.status(404).json({ error: 'Device not found' });
+  }
+  
+  res.json(device);
 });
 
 const PORT = process.env.PORT || 3000;
@@ -159,6 +78,7 @@ server.listen(PORT, () => {
   console.log(`🚀 IoT Server running on port ${PORT}`);
   console.log(`📊 SSE Stream: http://localhost:${PORT}/api/stream`);
   console.log(`🔧 Health check: http://localhost:${PORT}/health`);
+  console.log(`📱 Admin API: http://localhost:${PORT}/api/stats`);
 });
 
 // Graceful shutdown

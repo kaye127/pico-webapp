@@ -19,12 +19,11 @@ const router = createBrowserRouter([
         element: <Client />,
       },
       {
-        path: "/admin",
+        path: "admin",
         element: <Admin />,
       },
     ],
   },
-
   {
     path: "*",
     element: <AppFallback />,
