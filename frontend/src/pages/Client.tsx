@@ -230,16 +230,7 @@ export default function Client() {
                 </div>
               </div>
               
-              <div className="flex items-center justify-center p-6 bg-muted rounded-lg">
-                <div className="text-center">
-                  <Droplets className="w-8 h-8 mx-auto mb-2 text-blue-500" />
-                  <div className="text-2xl font-bold">
-                    {deviceStatus.humidity !== undefined ? `${deviceStatus.humidity}%` : '--'}
-                  </div>
-                  <div className="text-sm text-muted-foreground">Humidity</div>
-                </div>
-              </div>
-            </div>
+    
 
             {/* LED Control */}
             <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
