@@ -219,8 +219,8 @@ export default function Client() {
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Temperature and Humidity */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex items-center justify-center p-6 bg-muted rounded-lg">
+            {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-4"> */}
+              <div className="flex items-center justify-center p-6 bg-muted rounded-lg mx-auto">
                 <div className="text-center">
                   <Thermometer className="w-8 h-8 mx-auto mb-2 text-blue-500" />
                   <div className="text-2xl font-bold">
@@ -231,7 +231,7 @@ export default function Client() {
               </div>
               
              
-            </div>
+            {/* </div> */}
 
             {/* LED Control */}
             <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
