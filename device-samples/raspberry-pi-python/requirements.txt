@@ -1,0 +1,4 @@
+socketio-client==0.7.2
+python-socketio[client]==5.10.0
+Adafruit-DHT==1.4.0
+RPi.GPIO==0.7.1
