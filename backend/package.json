@@ -1,11 +1,12 @@
 {
   "name": "iot-backend",
   "version": "1.0.0",
+  "description": "Backend server for IoT device monitoring",
   "type": "module",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js"
+    "start": "node server.js",                // Production entry
+    "dev": "nodemon server.js"                // Dev mode with live reload
   },
   "dependencies": {
     "cors": "^2.8.5",
@@ -15,5 +16,18 @@
   },
   "devDependencies": {
     "nodemon": "^3.0.2"
-  }
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "iot",
+    "backend",
+    "socket.io",
+    "express",
+    "server-sent-events",
+    "websocket"
+  ],
+  "author": "Elliot Awe",
+  "license": "ISC"
 }
