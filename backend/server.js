@@ -1,16 +1,16 @@
 import express from 'express';
+import bodyParser from "body-parser";
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
 import { WebSocketManager } from './managers/websocket.js';
 import { SSEManager } from './managers/sse.js';
-
 const app = express();
 const server = createServer(app);
 
 // Enable CORS for all routes
 app.use(cors({
-    origin: ["http://localhost:5173", "http://localhost:3000"],
+    origin: "*",
     credentials: true
 }));
 
@@ -18,8 +18,9 @@ app.use(express.json());
 
 // Initialize Socket.IO with CORS
 const io = new Server(server, {
+  transports: ['websocket', 'polling'],
   cors: {
-    origin: ["http://localhost:5173", "http://localhost:3000"],
+    origin: "*",
     methods: ["GET", "POST"],
     credentials: true
   }
@@ -42,6 +43,87 @@ app.get('/health', (req, res) => {
     uptime: process.uptime()
   });
 });
+
+// app.post("/data", (req, res) => {
+//   const { deviceName, temperature } = req.body;
+
+//   let device = webSocketManager.getDevice(deviceName);
+
+//   if (!device) {
+//     device = webSocketManager.handleDeviceRegistration(deviceName);
+//   }
+//   console.log("conection ", device)
+
+//   const deviceSocket = webSocketManager.deviceSockets.get(device.socketId);
+//   if (!deviceSocket) {
+//     return res.status(404).send("Device socket not found");
+//   }
+
+//   deviceSocket.emit("temperature_data", { temperature });
+
+//   res.send("Temperature data sent to device");
+// });
+
+// app.post("/data", (req, res) => {
+//   const socket = io
+//   const { deviceName, temperature } = req.body;
+
+//   if (!deviceName || temperature === undefined) {
+//     return res.status(400).send("Missing deviceName or temperature");
+//   }
+
+//   let device = webSocketManager.getDevice(deviceName);
+//   console.log("bef", device)
+
+//   if (!device) {
+//     console.log(`📦 Registering device on first data: ${deviceName}`);
+//     // Simulate registration
+//     const register = webSocketManager.handleDeviceRegistration(socket, deviceName);
+//     console.log("re", register)
+//     device = webSocketManager.getDevice(deviceName);
+//     console.log("in", device)
+//   }
+//   console.log("out", device)
+
+//   const deviceSocket = webSocketManager.deviceSockets.get(device.socketId);
+//   if (!deviceSocket) {
+//     return res.status(404).send("Device socket not connected via WebSocket");
+//   }
+
+//   deviceSocket.emit("temperature_data", { temperature });
+//   console.log(`📨 Forwarded temperature data for ${deviceName}: ${temperature}`);
+//   res.send("Temperature data sent to device");
+// });
+
+
+app.post("/data", (req, res) => {
+  const { deviceName, temperature } = req.body;
+
+  if (!deviceName || temperature === undefined) {
+    return res.status(400).json({ error: "Missing deviceName or temperature" });
+  }
+
+  // Log the incoming data
+  console.log(`📡 Received data from ${deviceName}: ${temperature}°C`);
+
+  // Optional: Try forwarding to WebSocket clients
+  let device = webSocketManager.getDevice(deviceName);
+  if (device) {
+    const deviceSocket = webSocketManager.deviceSockets.get(device.socketId);
+    if (deviceSocket) {
+      deviceSocket.emit("temperature_data", { temperature });
+      console.log(`📨 Sent to WebSocket client for ${deviceName}`);
+    }
+  }
+
+  // ✅ Forward to SSE clients subscribed to this device
+  sseManager.sendToDevice(deviceName, "temperature_data", { temperature });
+  console.log(`📤 Broadcasted to SSE clients for ${deviceName}`);
+
+  return res.status(200).json({ message: "Data forwarded", device: deviceName });
+});
+
+
 
 // Server-Sent Events endpoint for real-time monitoring
 app.get('/api/stream', (req, res) => {
