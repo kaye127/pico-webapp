@@ -1,17 +1,33 @@
 {
-  "name": "webapp",
+  "name": "iot-webapp",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "IoT Device Monitoring Application",
+  "main": "server.js",
+  "type": "module",
   "scripts": {
-    "start": "concurrently \"npm run server\" \"npm run client\"",
-    "server": "node backend/server.js",    
-    "client": "npm --prefix frontend run start"  
+    "start": "node server.js",
+    "dev": "concurrently \"npm run server:dev\" \"npm run client:dev\"",
+    "server:dev": "cd backend && npm run dev",
+    "client:dev": "cd frontend && npm run dev",
+    "build": "npm run build:frontend && npm run build:backend",
+    "build:frontend": "cd frontend && npm run build",
+    "build:backend": "cp -r backend/* . && npm install --production",
+    "postinstall": "cd frontend && npm install && cd ../backend && npm install"
   },
-  "keywords": [],
+  "keywords": ["iot", "monitoring", "websocket", "react"],
   "author": "",
   "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "socket.io": "^4.8.1",
+    "ws": "^8.15.1"
+  },
   "devDependencies": {
-    "concurrently": "^8.0.0"
+    "concurrently": "^8.0.0",
+    "nodemon": "^3.0.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
