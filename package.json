@@ -5,7 +5,7 @@
   "main": "server.js",
   "type": "module",
   "scripts": {
-    "start": "npm run build && node server.js",
+    "start": "node server.js",
     "dev": "concurrently \"npm run server:dev\" \"npm run client:dev\"",
     "server:dev": "cd backend && npm run dev",
     "client:dev": "cd frontend && npm run dev",
